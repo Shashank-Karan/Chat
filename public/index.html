@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Chat App</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+    }
+
+    #chat-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat-messages {
+      flex-grow: 1;
+      height: 50vh;
+      overflow-y: auto;
+      border: 1px solid #d0d7de;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background-color: #f9fafb;
+    }
+
+    #message-form {
+      display: flex;
+      border-top: 1px solid #d0d7de;
+      padding-top: 10px;
+    }
+
+    #message-input {
+      flex-grow: 1;
+      padding: 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      background-color: #ffffff;
+    }
+
+    button {
+      padding: 12px 24px;
+      margin-left: 10px;
+      background-color: #0366d6;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0053a4;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      padding: 12px;
+      background-color: #e1e4e8;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #0366d6;
+    }
+
+    .username {
+      font-weight: bold;
+      color: #0366d6;
+      margin-right: 10px;
+    }
+
+    @media (max-width: 600px) {
+      #chat-container {
+        margin: 10px;
+        padding: 10px;
+      }
+
+      #message-input {
+        padding: 8px;
+      }
+
+      button {
+        padding: 8px 16px;
+        margin-left: 5px;
+      }
+
+      .message {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-messages"></div>
+    <form id="message-form">
+      <input type="text" id="message-input" placeholder="Type a message...">
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const socket = io();
+
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    let username = prompt('Enter your username:');
+    socket.emit('join', username);
+
+    messageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (messageInput.value) {
+        const message = {
+          id: Date.now(),
+          text: messageInput.value,
+          timestamp: new Date().toISOString()
+        };
+        socket.emit('message', message);
+        messageInput.value = '';
+      }
+    });
+
+    socket.on('message', (message) => {
+      displayMessage(message);
+    });
+
+    function displayMessage(message) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+      messageElement.innerHTML = `
+        <span class="username">${message.username}</span>: ${message.text}
+      `;
+      chatMessages.appendChild(messageElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  </script>
+</body>
+</html>
